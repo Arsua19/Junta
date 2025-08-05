@@ -145,7 +145,7 @@
 
         if (fechaActual && nuevoDia && (nuevoPago === "Sí" || nuevoPago === "No") && nuevoMonto) {
           const nuevaFecha = Timestamp.fromDate(new Date(fechaActual));
-          const diasPagados = Math.floor(parseFloat(nuevoMonto) / 70);
+          const diasPagados = Math.floor(parseFloat(nuevoMonto) / 20);
           await updateDoc(doc(db, "registrosCobro", id), {
             fecha: nuevaFecha,
             dia: nuevoDia,
@@ -164,4 +164,5 @@
 
 </body>
 </html>
+
 
