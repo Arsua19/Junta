@@ -2,135 +2,154 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Cliente Sabina - Cobros Mensuales</title>
+  <title>CUENTA DE COBRANZA - SABINA</title>
   <style>
     body {
-      font-family: Arial;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
       padding: 20px;
+    }
+    h2 {
+      color: #222;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     table {
       width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
+      border-collapse: separate;
+      border-spacing: 0 10px;
     }
-    th, td {
-      border: 1px solid #000;
-      padding: 8px;
+    thead th {
+      background: #6d1c1c;
+      color: white;
+      padding: 12px;
       text-align: center;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    tbody td {
+      background: #f9f9f9;
+      padding: 12px;
+      text-align: center;
+      border-radius: 8px;
+    }
+    tr.pago td {
+      background-color: #e0f7e9;
+      color: #155724;
+      font-weight: bold;
+    }
+    tr.no-pago td {
+      background-color: #fbeaea;
+      color: #7a1c1c;
+    }
+    #totales {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+    #totales span {
+      display: block;
+      margin-top: 5px;
     }
   </style>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <h2>Cliente: Sabina (Cobro Mensual)</h2>
 
-  <label for="monto">Monto (S/):</label>
-  <input type="number" id="monto" required>
-  <button onclick="registrarPago()">Registrar Pago</button>
+  <div class="container">
+    <h2>📄 CUENTA DEL COBRANZA - SABINA</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>📅 Fecha</th>
+          <th>🗓 Día</th>
+          <th>💵 ¿Pagó?</th>
+          <th>💰 Monto</th>
+          <th>📌 Días Pagados</th>
+        </tr>
+      </thead>
+      <tbody id="tablaCliente"></tbody>
+    </table>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Fecha</th>
-        <th>Monto (S/)</th>
-        <th>Días Pagados</th>
-      </tr>
-    </thead>
-    <tbody id="tabla-registros"></tbody>
-    <tfoot>
-      <tr>
-        <th>Total</th>
-        <th id="total-monto">0</th>
-        <th id="total-dias">0</th>
-      </tr>
-    </tfoot>
-  </table>
+    <div id="totales">
+      <span id="totalPagado">Total pagado: S/ 0.00</span>
+      <span id="totalDias">Total de días pagados: 0</span>
+    </div>
+  </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
     const firebaseConfig = {
-      apiKey: "TU_API_KEY",
-      authDomain: "TU_AUTH_DOMAIN",
-      projectId: "TU_PROJECT_ID",
-      storageBucket: "TU_STORAGE_BUCKET",
-      messagingSenderId: "TU_SENDER_ID",
-      appId: "TU_APP_ID"
+      apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
+      authDomain: "junta-e4b33.firebaseapp.com",
+      projectId: "junta-e4b33",
+      storageBucket: "junta-e4b33.appspot.com",
+      messagingSenderId: "1061817924806",
+      appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
-    const cliente = "Sabina";
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    async function registrarPago() {
-      const monto = parseFloat(document.getElementById("monto").value);
-      if (!monto) return alert("Ingrese un monto");
-
-      const hoy = new Date();
-      const mesActual = hoy.getMonth();
-      const añoActual = hoy.getFullYear();
-
-      const registros = await db.collection("registrosCobro")
-        .where("cliente", "==", cliente)
-        .get();
-
-      const yaPagoEsteMes = registros.docs.some(doc => {
-        const data = doc.data();
-        const fecha = data.fecha.toDate();
-        return fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual;
-      });
-
-      if (yaPagoEsteMes) {
-        alert("Ya se registró un pago este mes.");
-        return;
-      }
-
-      const diasPagados = monto / 20;
-      await db.collection("registrosCobro").add({
-        cliente,
-        fecha: firebase.firestore.Timestamp.fromDate(hoy),
-        monto,
-        diasPagados
-      });
-
-      document.getElementById("monto").value = "";
-      cargarRegistros();
-    }
+    const tabla = document.getElementById("tablaCliente");
+    const totalDiv = document.getElementById("totalPagado");
+    const totalDiasDiv = document.getElementById("totalDias");
 
     async function cargarRegistros() {
-      const tabla = document.getElementById("tabla-registros");
       tabla.innerHTML = "";
-
-      const registros = await db.collection("registrosCobro")
-        .where("cliente", "==", cliente)
-        .orderBy("fecha", "desc")
-        .get();
-
       let totalMonto = 0;
       let totalDias = 0;
 
-      registros.forEach(doc => {
+      const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
+      const snapshot = await getDocs(q);
+
+      snapshot.forEach(doc => {
         const data = doc.data();
-        const fecha = data.fecha.toDate().toLocaleDateString();
-        const monto = data.monto.toFixed(2);
-        const dias = data.diasPagados;
 
-        totalMonto += parseFloat(data.monto);
-        totalDias += dias;
+        const monto = data.pago === "Sí" ? parseFloat(data.monto) : 0;
+        const diasPagados = data.pago === "Sí" ? Math.floor((monto / 600) * 30) : 0;
+        totalMonto += monto;
+        totalDias += diasPagados;
 
-        const fila = `
-          <tr>
-            <td>${fecha}</td>
-            <td>${monto}</td>
-            <td>${dias}</td>
-          </tr>`;
-        tabla.innerHTML += fila;
+        let fechaTexto = "Sin fecha";
+        if (data.fecha && typeof data.fecha.toDate === "function") {
+          fechaTexto = data.fecha.toDate().toISOString().split("T")[0];
+        } else if (typeof data.fecha === "string") {
+          fechaTexto = data.fecha;
+        }
+
+        const fila = document.createElement("tr");
+        fila.className = data.pago === "Sí" ? "pago" : "no-pago";
+
+        fila.innerHTML = `
+          <td>${fechaTexto}</td>
+          <td>${data.dia || ""}</td>
+          <td>${data.pago || "No"}</td>
+          <td>S/ ${monto.toFixed(2)}</td>
+          <td>${diasPagados}</td>
+        `;
+
+        tabla.appendChild(fila);
       });
 
-      document.getElementById("total-monto").textContent = totalMonto.toFixed(2);
-      document.getElementById("total-dias").textContent = totalDias;
+      totalDiv.textContent = `Total pagado: S/ ${totalMonto.toFixed(2)}`;
+      totalDiasDiv.textContent = `Total de días pagados: ${totalDias}`;
     }
 
     cargarRegistros();
   </script>
+
 </body>
 </html>
