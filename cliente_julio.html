@@ -112,8 +112,11 @@
       let totalMonto = 0;
       let totalDias = 0;
 
-      const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
-      const snapshot = await getDocs(q);
+     const q = query(
+     collection(db, "registrosCobro"),
+     where("cliente", "==", "Julio"),
+     orderBy("fecha")
+     );
 
       snapshot.forEach(doc => {
         const data = doc.data();
@@ -153,3 +156,4 @@
 
 </body>
 </html>
+
