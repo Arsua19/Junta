@@ -21,7 +21,6 @@
 <body>
 
 <h2>ADMINISTRADOR</h2>
-<button id="btnNuevaCuenta" style="background: #555; margin-bottom: 20px;">Comenzar Nueva Cuenta</button>
 
 <form id="formulario">
   <label>Fecha:</label>
@@ -79,8 +78,8 @@
 
   const tarifas = {
     elena: 20,
-    julio: 183.50,
-    Magali: 10,
+    julio: 140,
+    sabina: 600
   };
 
   const form = document.getElementById("formulario");
@@ -128,7 +127,7 @@
       `;
       tabla.appendChild(fila);
     });
-    totalDias.textContent = `Total pagado: ${total} ${cliente === "elena" ? "día(s)" : cliente === "julio" ? "semana(s)" : cliente === "Magali" ? "día(s)"}`;
+    totalDias.textContent = `Total pagado: ${total} ${cliente === "elena" ? "día(s)" : cliente === "julio" ? "semana(s)" : "mes(es)"}`;
 
     document.querySelectorAll(".btn-eliminar").forEach(btn => {
       btn.addEventListener("click", async () => {
@@ -165,29 +164,7 @@
   }
 
   cargarRegistros();
-
-  // 🔽 NUEVA FUNCIÓN: reiniciar cuenta del cliente
-  document.getElementById("btnNuevaCuenta").addEventListener("click", async () => {
-    const confirmar = confirm(`¿Seguro que deseas borrar todos los registros de ${cliente.toUpperCase()}? Esta acción no se puede deshacer.`);
-    if (!confirmar) return;
-
-    const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
-    const snapshot = await getDocs(q);
-    const batch = [];
-
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      if (data.cliente === cliente) {
-        batch.push(deleteDoc(doc(db, "registrosCobro", docSnap.id)));
-      }
-    });
-
-    await Promise.all(batch);
-    alert("Cuenta reiniciada correctamente.");
-    cargarRegistros();
-  });
 </script>
 
 </body>
 </html>
-
