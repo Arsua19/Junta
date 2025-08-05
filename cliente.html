@@ -119,7 +119,7 @@
         const data = doc.data();
 
         const monto = data.pago === "Sí" ? parseFloat(data.monto) : 0;
-        const diasPagados = data.pago === "Sí" ? Math.floor(monto / 70) : 0;
+        const diasPagados = data.pago === "Sí" ? Math.floor(monto / 20) : 0;
         totalMonto += monto;
         totalDias += diasPagados;
 
@@ -154,3 +154,4 @@
 
 </body>
 </html>
+
