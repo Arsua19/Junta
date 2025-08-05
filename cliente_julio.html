@@ -65,7 +65,7 @@
 <body>
 
   <div class="container">
-    <h2>📄 CUENTA DEL COBRANZA - JULIO</h2>
+    <h2>📄 CUENTA DE COBRANZA - JULIO</h2>
     <table>
       <thead>
         <tr>
@@ -88,7 +88,12 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, query, orderBy
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      where,
+      orderBy
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -112,11 +117,13 @@
       let totalMonto = 0;
       let totalDias = 0;
 
-     const q = query(
-     collection(db, "registrosCobro"),
-     where("cliente", "==", "Julio"),
-     orderBy("fecha")
-     );
+      const q = query(
+        collection(db, "registrosCobro"),
+        where("cliente", "==", "Julio"),
+        orderBy("fecha")
+      );
+
+      const snapshot = await getDocs(q);
 
       snapshot.forEach(doc => {
         const data = doc.data();
@@ -156,4 +163,3 @@
 
 </body>
 </html>
-
