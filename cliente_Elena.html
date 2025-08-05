@@ -114,8 +114,9 @@
       const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
       const snapshot = await getDocs(q);
 
-      snapshot.forEach(doc => {
+       snapshot.forEach(doc => {
         const data = doc.data();
+        if (data.cliente !== "elena") return;
 
         const monto = data.pago === "Sí" ? parseFloat(data.monto) : 0;
         const diasPagados = data.pago === "Sí" ? Math.floor(monto / 20) : 0;
@@ -153,6 +154,7 @@
 
 </body>
 </html>
+
 
 
 
