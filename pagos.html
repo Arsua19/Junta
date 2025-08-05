@@ -79,8 +79,8 @@
 
   const tarifas = {
     elena: 20,
-    julio: 140,
-    sabina: 600
+    julio: 183.50,
+    sabina: 10,
   };
 
   const form = document.getElementById("formulario");
@@ -128,7 +128,7 @@
       `;
       tabla.appendChild(fila);
     });
-    totalDias.textContent = `Total pagado: ${total} ${cliente === "elena" ? "día(s)" : cliente === "julio" ? "semana(s)" : "mes(es)"}`;
+    totalDias.textContent = `Total pagado: ${total} ${cliente === "elena" ? "día(s)" : cliente === "julio" ? "semana(s)" : cliente === "Magali" ? "día(s)"}`;
 
     document.querySelectorAll(".btn-eliminar").forEach(btn => {
       btn.addEventListener("click", async () => {
