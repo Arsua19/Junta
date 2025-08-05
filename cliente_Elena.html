@@ -2,14 +2,19 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Cuenta de Elena</title>
+  <title>CUENTA DEL COBRANZA - ELENA</title>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f0f2f5;
+      margin: 0;
       padding: 20px;
     }
-    h2 { text-align: center; }
+    h2 {
+      color: #222;
+      text-align: center;
+      margin-bottom: 30px;
+    }
     .container {
       max-width: 900px;
       margin: auto;
@@ -18,21 +23,49 @@
       border-radius: 12px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
-    th, td {
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+    }
+    thead th {
+      background: #005599;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    tbody td {
+      background: #f9f9f9;
       padding: 12px;
       text-align: center;
       border-radius: 8px;
     }
-    thead th { background: #007bff; color: white; }
-    .pago { background: #e0f7e9; color: #155724; font-weight: bold; }
-    .no-pago { background: #fbeaea; color: #7a1c1c; }
-    #totales { margin-top: 20px; text-align: center; }
+    tr.pago td {
+      background-color: #e0f7e9;
+      color: #155724;
+      font-weight: bold;
+    }
+    tr.no-pago td {
+      background-color: #fbeaea;
+      color: #7a1c1c;
+    }
+    #totales {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+    #totales span {
+      display: block;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
+
   <div class="container">
-    <h2>📄 Cuenta de Elena</h2>
+    <h2>📄 CUENTA DE COBRANZA  - ELENA</h2>
     <table>
       <thead>
         <tr>
@@ -45,6 +78,7 @@
       </thead>
       <tbody id="tablaCliente"></tbody>
     </table>
+
     <div id="totales">
       <span id="totalPagado">Total pagado: S/ 0.00</span>
       <span id="totalDias">Total de días pagados: 0</span>
@@ -54,17 +88,17 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, query, where, orderBy, getDocs
+      getFirestore, collection, getDocs, query, orderBy
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
-      authDomain: "junta-e4b33.firebaseapp.com",
-      projectId: "junta-e4b33",
-      storageBucket: "junta-e4b33.appspot.com",
-      messagingSenderId: "1061817924806",
-      appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
-    };
+  const firebaseConfig = {
+  apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
+  authDomain: "junta-e4b33.firebaseapp.com",
+  projectId: "junta-e4b33",
+  storageBucket: "junta-e4b33.firebasestorage.app",
+  messagingSenderId: "1061817924806",
+  appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
+};
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -78,18 +112,20 @@
       let totalMonto = 0;
       let totalDias = 0;
 
-      const q = query(collection(db, "registrosCobro"), where("cliente", "==", "elena"), orderBy("fecha"));
+      const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
       const snapshot = await getDocs(q);
 
       snapshot.forEach(doc => {
         const data = doc.data();
+
         const monto = data.pago === "Sí" ? parseFloat(data.monto) : 0;
         const diasPagados = data.pago === "Sí" ? Math.floor(monto / 20) : 0;
         totalMonto += monto;
         totalDias += diasPagados;
 
+        // Manejo de fecha robusto: puede ser Timestamp o string
         let fechaTexto = "Sin fecha";
-        if (data.fecha?.toDate) {
+        if (data.fecha && typeof data.fecha.toDate === "function") {
           fechaTexto = data.fecha.toDate().toISOString().split("T")[0];
         } else if (typeof data.fecha === "string") {
           fechaTexto = data.fecha;
@@ -97,255 +133,24 @@
 
         const fila = document.createElement("tr");
         fila.className = data.pago === "Sí" ? "pago" : "no-pago";
-        fila.innerHTML = `
+
+        fila.innerHTML = 
           <td>${fechaTexto}</td>
           <td>${data.dia || ""}</td>
           <td>${data.pago || "No"}</td>
           <td>S/ ${monto.toFixed(2)}</td>
           <td>${diasPagados}</td>
-        `;
+        ;
+
         tabla.appendChild(fila);
       });
 
-      totalDiv.textContent = `Total pagado: S/ ${totalMonto.toFixed(2)}`;
-      totalDiasDiv.textContent = `Total de días pagados: ${totalDias}`;
+      totalDiv.textContent = Total pagado: S/ ${totalMonto.toFixed(2)};
+      totalDiasDiv.textContent = Total de días pagados: ${totalDias};
     }
 
     cargarRegistros();
   </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Cuenta de Elena</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
-      padding: 20px;
-    }
-    h2 { text-align: center; }
-    .container {
-      max-width: 900px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
-    th, td {
-      padding: 12px;
-      text-align: center;
-      border-radius: 8px;
-    }
-    thead th { background: #007bff; color: white; }
-    .pago { background: #e0f7e9; color: #155724; font-weight: bold; }
-    .no-pago { background: #fbeaea; color: #7a1c1c; }
-    #totales { margin-top: 20px; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h2>📄 Cuenta de Elena</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>📅 Fecha</th>
-          <th>🗓 Día</th>
-          <th>💵 ¿Pagó?</th>
-          <th>💰 Monto</th>
-          <th>📌 Días Pagados</th>
-        </tr>
-      </thead>
-      <tbody id="tablaCliente"></tbody>
-    </table>
-    <div id="totales">
-      <span id="totalPagado">Total pagado: S/ 0.00</span>
-      <span id="totalDias">Total de días pagados: 0</span>
-    </div>
-  </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, query, where, orderBy, getDocs
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
-      authDomain: "junta-e4b33.firebaseapp.com",
-      projectId: "junta-e4b33",
-      storageBucket: "junta-e4b33.appspot.com",
-      messagingSenderId: "1061817924806",
-      appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const tabla = document.getElementById("tablaCliente");
-    const totalDiv = document.getElementById("totalPagado");
-    const totalDiasDiv = document.getElementById("totalDias");
-
-    async function cargarRegistros() {
-      tabla.innerHTML = "";
-      let totalMonto = 0;
-      let totalDias = 0;
-
-      const q = query(collection(db, "registrosCobro"), where("cliente", "==", "elena"), orderBy("fecha"));
-      const snapshot = await getDocs(q);
-
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const monto = data.pago === "Sí" ? parseFloat(data.monto) : 0;
-        const diasPagados = data.pago === "Sí" ? Math.floor(monto / 20) : 0;
-        totalMonto += monto;
-        totalDias += diasPagados;
-
-        let fechaTexto = "Sin fecha";
-        if (data.fecha?.toDate) {
-          fechaTexto = data.fecha.toDate().toISOString().split("T")[0];
-        } else if (typeof data.fecha === "string") {
-          fechaTexto = data.fecha;
-        }
-
-        const fila = document.createElement("tr");
-        fila.className = data.pago === "Sí" ? "pago" : "no-pago";
-        fila.innerHTML = `
-          <td>${fechaTexto}</td>
-          <td>${data.dia || ""}</td>
-          <td>${data.pago || "No"}</td>
-          <td>S/ ${monto.toFixed(2)}</td>
-          <td>${diasPagados}</td>
-        `;
-        tabla.appendChild(fila);
-      });
-
-      totalDiv.textContent = `Total pagado: S/ ${totalMonto.toFixed(2)}`;
-      totalDiasDiv.textContent = `Total de días pagados: ${totalDias}`;
-    }
-
-    cargarRegistros();
-  </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Cuenta de Elena</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
-      padding: 20px;
-    }
-    h2 { text-align: center; }
-    .container {
-      max-width: 900px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
-    th, td {
-      padding: 12px;
-      text-align: center;
-      border-radius: 8px;
-    }
-    thead th { background: #007bff; color: white; }
-    .pago { background: #e0f7e9; color: #155724; font-weight: bold; }
-    .no-pago { background: #fbeaea; color: #7a1c1c; }
-    #totales { margin-top: 20px; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h2>📄 Cuenta de Elena</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>📅 Fecha</th>
-          <th>🗓 Día</th>
-          <th>💵 ¿Pagó?</th>
-          <th>💰 Monto</th>
-          <th>📌 Días Pagados</th>
-        </tr>
-      </thead>
-      <tbody id="tablaCliente"></tbody>
-    </table>
-    <div id="totales">
-      <span id="totalPagado">Total pagado: S/ 0.00</span>
-      <span id="totalDias">Total de días pagados: 0</span>
-    </div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, query, where, orderBy, getDocs
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
-      authDomain: "junta-e4b33.firebaseapp.com",
-      projectId: "junta-e4b33",
-      storageBucket: "junta-e4b33.appspot.com",
-      messagingSenderId: "1061817924806",
-      appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const tabla = document.getElementById("tablaCliente");
-    const totalDiv = document.getElementById("totalPagado");
-    const totalDiasDiv = document.getElementById("totalDias");
-
-    async function cargarRegistros() {
-      tabla.innerHTML = "";
-      let totalMonto = 0;
-      let totalDias = 0;
-
-      const q = query(collection(db, "registrosCobro"), where("cliente", "==", "elena"), orderBy("fecha"));
-      const snapshot = await getDocs(q);
-
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const monto = data.pago === "Sí" ? parseFloat(data.monto) : 0;
-        const diasPagados = data.pago === "Sí" ? Math.floor(monto / 20) : 0;
-        totalMonto += monto;
-        totalDias += diasPagados;
-
-        let fechaTexto = "Sin fecha";
-        if (data.fecha?.toDate) {
-          fechaTexto = data.fecha.toDate().toISOString().split("T")[0];
-        } else if (typeof data.fecha === "string") {
-          fechaTexto = data.fecha;
-        }
-
-        const fila = document.createElement("tr");
-        fila.className = data.pago === "Sí" ? "pago" : "no-pago";
-        fila.innerHTML = `
-          <td>${fechaTexto}</td>
-          <td>${data.dia || ""}</td>
-          <td>${data.pago || "No"}</td>
-          <td>S/ ${monto.toFixed(2)}</td>
-          <td>${diasPagados}</td>
-        `;
-        tabla.appendChild(fila);
-      });
-
-      totalDiv.textContent = `Total pagado: S/ ${totalMonto.toFixed(2)}`;
-      totalDiasDiv.textContent = `Total de días pagados: ${totalDias}`;
-    }
-
-    cargarRegistros();
-  </script>
 </body>
 </html>
