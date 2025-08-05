@@ -83,7 +83,7 @@
     const dia = document.getElementById("dia").value;
     const pago = document.getElementById("pago").value;
     const monto = parseFloat(document.getElementById("monto").value).toFixed(2);
-    const diasPagados = Math.floor(monto / 70);
+    const diasPagados = Math.floor(monto / 20);
 
     const nuevo = { fecha, dia, pago, monto, diasPagados };
     await addDoc(collection(db, "registrosCobro"), nuevo);
@@ -164,5 +164,6 @@
 
 </body>
 </html>
+
 
 
