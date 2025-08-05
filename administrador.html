@@ -2,194 +2,165 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Pagos Mensuales por Día</title>
+  <title>Administrador - Junta de Cobros</title>
   <style>
-    body {
-      font-family: Arial;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-    h2 {
-      color: #333;
-      margin-top: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background: white;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ccc;
-      text-align: center;
-    }
-    th {
-      background: #eee;
-    }
-    .pago {
-      background-color: #c8e6c9; /* verde suave */
-    }
-    .no-pago {
-      background-color: #ffcdd2; /* rojo suave */
-    }
-    input, select, button {
-      padding: 10px;
-      margin: 5px;
-    }
+    body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+    h2 { color: #333; }
+    form, table { background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 0 10px #ccc; }
+    input, select { width: 100%; padding: 8px; margin: 5px 0; }
+    button { padding: 10px 15px; background: green; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+    .pago { background-color: #d4edda; }
+    .no-pago { background-color: #f8d7da; }
+    .btn-eliminar { background: red; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+    .btn-editar { background: orange; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-right: 5px; }
+    #totalDias { margin-top: 15px; font-weight: bold; font-size: 1.1em; }
   </style>
 </head>
 <body>
-  <h2>Registro de Pagos</h2>
-  <form id="formulario">
-    <input type="date" id="fecha" required>
-    <input type="text" id="dia" placeholder="Día" required>
-    <select id="pago">
-      <option value="Sí">Sí</option>
-      <option value="No">No</option>
-    </select>
-    <input type="number" id="monto" placeholder="Monto" required>
-    <button type="submit">Registrar</button>
-  </form>
 
-  <h2>Pagos Mensuales por Día</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Fecha</th>
-        <th>Día</th>
-        <th>¿Pagó?</th>
-        <th>Monto</th>
-        <th>Días Pagados</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody id="tabla"></tbody>
-  </table>
+<h2>ADMINISTRADOR - Registrar Pagos</h2>
 
-  <p id="totalDias"></p>
+<form id="formulario">
+  <label>Fecha:</label>
+  <input type="date" id="fecha" required>
+  <label>Día:</label>
+  <input type="text" id="dia" required>
+  <label>¿Pagó?:</label>
+  <select id="pago">
+    <option value="Sí">Sí</option>
+    <option value="No">No</option>
+  </select>
+  <label>Monto (S/):</label>
+  <input type="number" id="monto" min="0" step="0.01" required>
+  <button type="submit">Agregar Registro</button>
+</form>
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, getDocs, deleteDoc,
-      doc, updateDoc, query, orderBy, Timestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<table>
+  <thead>
+    <tr>
+      <th>Fecha</th>
+      <th>Día</th>
+      <th>Pagó</th>
+      <th>Monto</th>
+      <th>Días Pagados</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody id="tablaRegistros"></tbody>
+</table>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyC-ZQt0n7b2pWYsmzBkUCC55Q8ONvE2yIo",
-      authDomain: "junta-dbb1e.firebaseapp.com",
-      projectId: "junta-dbb1e",
-      storageBucket: "junta-dbb1e.appspot.com",
-      messagingSenderId: "597757319063",
-      appId: "1:597757319063:web:fd9d62d8468e8e5f2b9305"
-    };
+<div id="totalDias">Total de días pagados: 0</div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, getDocs, deleteDoc,
+    doc, updateDoc, query, orderBy, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const form = document.getElementById("formulario");
-    const tabla = document.getElementById("tabla");
-    const totalDias = document.getElementById("totalDias");
+ const firebaseConfig = {
+  apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
+  authDomain: "junta-e4b33.firebaseapp.com",
+  projectId: "junta-e4b33",
+  storageBucket: "junta-e4b33.firebasestorage.app",
+  messagingSenderId: "1061817924806",
+  appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
+};
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const fecha = new Date(document.getElementById("fecha").value);
-      const dia = document.getElementById("dia").value;
-      const pago = document.getElementById("pago").value;
-      const monto = parseFloat(document.getElementById("monto").value);
-      const diasPagados = pago === "Sí" ? 1 : 0;
+  const form = document.getElementById("formulario");
+  const tabla = document.getElementById("tablaRegistros");
+  const totalDias = document.getElementById("totalDias");
 
-      await addDoc(collection(db, "registrosCobro"), {
-        fecha: Timestamp.fromDate(fecha),
-        dia,
-        pago,
-        monto,
-        diasPagados
-      });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-      form.reset();
-      cargarRegistros();
+    const fechaStr = document.getElementById("fecha").value;
+    const fecha = Timestamp.fromDate(new Date(fechaStr));
+    const dia = document.getElementById("dia").value;
+    const pago = document.getElementById("pago").value;
+    const monto = parseFloat(document.getElementById("monto").value).toFixed(2);
+    const diasPagados = Math.floor(monto / 70);
+
+    const nuevo = { fecha, dia, pago, monto, diasPagados };
+    await addDoc(collection(db, "registrosCobro"), nuevo);
+    form.reset();
+    cargarRegistros();
+  });
+
+  async function cargarRegistros() {
+    tabla.innerHTML = "";
+    let total = 0;
+
+    const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
+    const snapshot = await getDocs(q);
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const fechaDate = data.fecha.toDate();
+      const fechaTexto = fechaDate.toISOString().split("T")[0];
+      const dias = data.pago === "Sí" ? (data.diasPagados || 0) : 0;
+      total += dias;
+
+      const fila = document.createElement("tr");
+      fila.className = data.pago === "Sí" ? "pago" : "no-pago";
+
+      fila.innerHTML = 
+        <td>${fechaTexto}</td>
+        <td>${data.dia}</td>
+        <td>${data.pago}</td>
+        <td>S/ ${data.pago === "Sí" ? data.monto : "0.00"}</td>
+        <td>${dias} día(s)</td>
+        <td>
+          <button class="btn-editar" data-id="${docSnap.id}">Editar</button>
+          <button class="btn-eliminar" data-id="${docSnap.id}">Eliminar</button>
+        </td>
+      ;
+      tabla.appendChild(fila);
     });
 
-    async function cargarRegistros() {
-      tabla.innerHTML = "";
-      let total = 0;
-      let totalMonto = 0;
+    totalDias.textContent = Total de días pagados: ${total};
 
-      const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
-      const snapshot = await getDocs(q);
-
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        const fechaDate = data.fecha.toDate();
-        const fechaTexto = fechaDate.toISOString().split("T")[0];
-
-        const dias = data.pago === "Sí" ? 1 : 0;
-        const monto = parseFloat(data.monto).toFixed(2);
-
-        if (data.pago === "Sí") {
-          total += dias;
-          totalMonto += parseFloat(monto);
+    document.querySelectorAll(".btn-eliminar").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        if (confirm("¿Seguro que deseas eliminar este registro?")) {
+          await deleteDoc(doc(db, "registrosCobro", id));
+          cargarRegistros();
         }
-
-        const fila = document.createElement("tr");
-        fila.className = data.pago === "Sí" ? "pago" : "no-pago";
-
-        fila.innerHTML = `
-          <td>${fechaTexto}</td>
-          <td>${data.dia}</td>
-          <td>${data.pago}</td>
-          <td>S/ ${monto}</td>
-          <td>${dias}</td>
-          <td>
-            <button class="btn-editar" data-id="${docSnap.id}">Editar</button>
-            <button class="btn-eliminar" data-id="${docSnap.id}">Eliminar</button>
-          </td>
-        `;
-        tabla.appendChild(fila);
       });
+    });
 
-      totalDias.textContent = `Total de días pagados: ${total} | Total recaudado: S/ ${totalMonto.toFixed(2)}`;
+    document.querySelectorAll(".btn-editar").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const fila = btn.closest("tr");
+        const fechaActual = fila.children[0].textContent;
+        const nuevoDia = prompt("Nuevo día:", fila.children[1].textContent);
+        const nuevoPago = prompt("¿Pagó? (Sí/No):", fila.children[2].textContent);
+        const nuevoMonto = prompt("Nuevo monto:", fila.children[3].textContent.replace("S/ ", ""));
 
-      document.querySelectorAll(".btn-eliminar").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          if (confirm("¿Seguro que deseas eliminar este registro?")) {
-            await deleteDoc(doc(db, "registrosCobro", id));
-            cargarRegistros();
-          }
-        });
+        if (fechaActual && nuevoDia && (nuevoPago === "Sí" || nuevoPago === "No") && nuevoMonto) {
+          const nuevaFecha = Timestamp.fromDate(new Date(fechaActual));
+          const diasPagados = Math.floor(parseFloat(nuevoMonto) / 70);
+          await updateDoc(doc(db, "registrosCobro", id), {
+            fecha: nuevaFecha,
+            dia: nuevoDia,
+            pago: nuevoPago,
+            monto: parseFloat(nuevoMonto).toFixed(2),
+            diasPagados
+          });
+          cargarRegistros();
+        }
       });
+    });
+  }
 
-      document.querySelectorAll(".btn-editar").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const id = btn.dataset.id;
-          const fila = btn.closest("tr");
-          const fechaActual = fila.children[0].textContent;
-          const nuevoDia = prompt("Nuevo día:", fila.children[1].textContent);
-          const nuevoPago = prompt("¿Pagó? (Sí/No):", fila.children[2].textContent);
-          const nuevoMonto = prompt("Nuevo monto:", fila.children[3].textContent.replace("S/ ", ""));
+  cargarRegistros();
+</script>
 
-          if (fechaActual && nuevoDia && (nuevoPago === "Sí" || nuevoPago === "No") && nuevoMonto) {
-            const nuevaFecha = Timestamp.fromDate(new Date(fechaActual));
-            const diasPagados = nuevoPago === "Sí" ? 1 : 0;
-
-            await updateDoc(doc(db, "registrosCobro", id), {
-              fecha: nuevaFecha,
-              dia: nuevoDia,
-              pago: nuevoPago,
-              monto: parseFloat(nuevoMonto).toFixed(2),
-              diasPagados
-            });
-            cargarRegistros();
-          }
-        });
-      });
-    }
-
-    cargarRegistros();
-  </script>
 </body>
 </html>
