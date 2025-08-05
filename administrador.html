@@ -20,7 +20,7 @@
 </head>
 <body>
 
-<h2>ADMINISTRADOR - Registrar Pagos</h2>
+<h2>ADMINISTRADOR</h2>
 
 <form id="formulario">
   <label>Fecha:</label>
@@ -44,14 +44,14 @@
       <th>Día</th>
       <th>Pagó</th>
       <th>Monto</th>
-      <th>Días Pagados</th>
+      <th>Unidad</th>
       <th>Acciones</th>
     </tr>
   </thead>
   <tbody id="tablaRegistros"></tbody>
 </table>
 
-<div id="totalDias">Total de días pagados: 0</div>
+<div id="totalDias">Total pagado: 0</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -60,16 +60,27 @@
     doc, updateDoc, query, orderBy, Timestamp
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
- const firebaseConfig = {
-  apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
-  authDomain: "junta-e4b33.firebaseapp.com",
-  projectId: "junta-e4b33",
-  storageBucket: "junta-e4b33.firebasestorage.app",
-  messagingSenderId: "1061817924806",
-  appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
+    authDomain: "junta-e4b33.firebaseapp.com",
+    projectId: "junta-e4b33",
+    storageBucket: "junta-e4b33.appspot.com",
+    messagingSenderId: "1061817924806",
+    appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
+  };
+
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const cliente = urlParams.get("cliente") || "desconocido";
+  document.querySelector("h2").textContent = `ADMINISTRADOR - ${cliente.toUpperCase()}`;
+
+  const tarifas = {
+    elena: 20,
+    julio: 140,
+    sabina: 600
+  };
 
   const form = document.getElementById("formulario");
   const tabla = document.getElementById("tablaRegistros");
@@ -77,15 +88,14 @@
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-
     const fechaStr = document.getElementById("fecha").value;
     const fecha = Timestamp.fromDate(new Date(fechaStr));
     const dia = document.getElementById("dia").value;
     const pago = document.getElementById("pago").value;
     const monto = parseFloat(document.getElementById("monto").value).toFixed(2);
-    const diasPagados = Math.floor(monto / 20);
-
-    const nuevo = { fecha, dia, pago, monto, diasPagados };
+    const tarifa = tarifas[cliente] || 1;
+    const unidades = Math.floor(monto / tarifa);
+    const nuevo = { fecha, dia, pago, monto, diasPagados: unidades, cliente };
     await addDoc(collection(db, "registrosCobro"), nuevo);
     form.reset();
     cargarRegistros();
@@ -94,26 +104,22 @@
   async function cargarRegistros() {
     tabla.innerHTML = "";
     let total = 0;
-
     const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
     const snapshot = await getDocs(q);
-
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
-      const fechaDate = data.fecha.toDate();
-      const fechaTexto = fechaDate.toISOString().split("T")[0];
-      const dias = data.pago === "Sí" ? (data.diasPagados || 0) : 0;
-      total += dias;
-
+      if (data.cliente !== cliente) return;
+      const fechaTexto = data.fecha.toDate().toISOString().split("T")[0];
+      const unidades = data.pago === "Sí" ? (data.diasPagados || 0) : 0;
+      total += unidades;
       const fila = document.createElement("tr");
       fila.className = data.pago === "Sí" ? "pago" : "no-pago";
-
       fila.innerHTML = `
         <td>${fechaTexto}</td>
         <td>${data.dia}</td>
         <td>${data.pago}</td>
         <td>S/ ${data.pago === "Sí" ? data.monto : "0.00"}</td>
-        <td>${dias} día(s)</td>
+        <td>${unidades}</td>
         <td>
           <button class="btn-editar" data-id="${docSnap.id}">Editar</button>
           <button class="btn-eliminar" data-id="${docSnap.id}">Eliminar</button>
@@ -121,8 +127,7 @@
       `;
       tabla.appendChild(fila);
     });
-
-    totalDias.textContent = `Total de días pagados: ${total}`;
+    totalDias.textContent = `Total pagado: ${total} ${cliente === "elena" ? "día(s)" : cliente === "julio" ? "semana(s)" : "mes(es)"}`;
 
     document.querySelectorAll(".btn-eliminar").forEach(btn => {
       btn.addEventListener("click", async () => {
@@ -142,16 +147,15 @@
         const nuevoDia = prompt("Nuevo día:", fila.children[1].textContent);
         const nuevoPago = prompt("¿Pagó? (Sí/No):", fila.children[2].textContent);
         const nuevoMonto = prompt("Nuevo monto:", fila.children[3].textContent.replace("S/ ", ""));
-
         if (fechaActual && nuevoDia && (nuevoPago === "Sí" || nuevoPago === "No") && nuevoMonto) {
           const nuevaFecha = Timestamp.fromDate(new Date(fechaActual));
-          const diasPagados = Math.floor(parseFloat(nuevoMonto) / 20);
+          const unidades = Math.floor(parseFloat(nuevoMonto) / (tarifas[cliente] || 1));
           await updateDoc(doc(db, "registrosCobro", id), {
             fecha: nuevaFecha,
             dia: nuevoDia,
             pago: nuevoPago,
             monto: parseFloat(nuevoMonto).toFixed(2),
-            diasPagados
+            diasPagados: unidades
           });
           cargarRegistros();
         }
@@ -164,5 +168,7 @@
 
 </body>
 </html>
+
+
 
 
