@@ -65,7 +65,7 @@
 <body>
 
   <div class="container">
-    <h2>📄 CUENTA DE COBRANZA  - ELENA</h2>
+    <h2>📄 CUENTA DE COBRANZA - ELENA</h2>
     <table>
       <thead>
         <tr>
@@ -91,7 +91,7 @@
       getFirestore, collection, getDocs, query, orderBy
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  const firebaseConfig = {
+     const firebaseConfig = {
   apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
   authDomain: "junta-e4b33.firebaseapp.com",
   projectId: "junta-e4b33",
@@ -99,7 +99,6 @@
   messagingSenderId: "1061817924806",
   appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
 };
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -134,19 +133,19 @@
         const fila = document.createElement("tr");
         fila.className = data.pago === "Sí" ? "pago" : "no-pago";
 
-        fila.innerHTML = 
+        fila.innerHTML = `
           <td>${fechaTexto}</td>
           <td>${data.dia || ""}</td>
           <td>${data.pago || "No"}</td>
           <td>S/ ${monto.toFixed(2)}</td>
           <td>${diasPagados}</td>
-        ;
+        `;
 
         tabla.appendChild(fila);
       });
 
-      totalDiv.textContent = Total pagado: S/ ${totalMonto.toFixed(2)};
-      totalDiasDiv.textContent = Total de días pagados: ${totalDias};
+      totalDiv.textContent = `Total pagado: S/ ${totalMonto.toFixed(2)}`;
+      totalDiasDiv.textContent = `Total de días pagados: ${totalDias}`;
     }
 
     cargarRegistros();
@@ -154,3 +153,7 @@
 
 </body>
 </html>
+
+
+
+
