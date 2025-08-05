@@ -2,14 +2,70 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>CUENTA DEL CARRO - ELENA</title>
+  <title>CUENTA DEL CARRO - LUCIA</title>
   <style>
-    /* Estilos iguales que tu ejemplo */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      color: #222;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+    }
+    thead th {
+      background: #005599;
+      color: white;
+      padding: 12px;
+      text-align: center;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    tbody td {
+      background: #f9f9f9;
+      padding: 12px;
+      text-align: center;
+      border-radius: 8px;
+    }
+    tr.pago td {
+      background-color: #e0f7e9;
+      color: #155724;
+      font-weight: bold;
+    }
+    tr.no-pago td {
+      background-color: #fbeaea;
+      color: #7a1c1c;
+    }
+    #totales {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+    #totales span {
+      display: block;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
+
   <div class="container">
-    <h2>📄 CUENTA DEL CARRO - ELENA</h2>
+    <h2>📄 CUENTA DEL CARRO - LUCIA</h2>
     <table>
       <thead>
         <tr>
@@ -22,6 +78,7 @@
       </thead>
       <tbody id="tablaCliente"></tbody>
     </table>
+
     <div id="totales">
       <span id="totalPagado">Total pagado: S/ 0.00</span>
       <span id="totalDias">Total de días pagados: 0</span>
@@ -30,16 +87,19 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getFirestore, collection, getDocs, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
-    apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
-    authDomain: "junta-e4b33.firebaseapp.com",
-    projectId: "junta-e4b33",
-    storageBucket: "junta-e4b33.appspot.com",
-    messagingSenderId: "1061817924806",
-    appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
-  };
+      apiKey: "AIzaSyAapctHWYLZQB2AJq93PaHIO8a-D525h84",
+      authDomain: "junta-cobros.firebaseapp.com",
+      projectId: "junta-cobros",
+      storageBucket: "junta-cobros.appspot.com",
+      messagingSenderId: "114984888186",
+      appId: "1:114984888186:web:f526903357bb8039d618c3"
+    };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
@@ -57,13 +117,13 @@
 
       snapshot.forEach(doc => {
         const data = doc.data();
-        if (data.cliente !== "Elena") return;
 
         const monto = data.pago === "Sí" ? parseFloat(data.monto) : 0;
         const diasPagados = data.pago === "Sí" ? Math.floor(monto / 20) : 0;
         totalMonto += monto;
         totalDias += diasPagados;
 
+        // Manejo de fecha robusto: puede ser Timestamp o string
         let fechaTexto = "Sin fecha";
         if (data.fecha && typeof data.fecha.toDate === "function") {
           fechaTexto = data.fecha.toDate().toISOString().split("T")[0];
@@ -73,6 +133,7 @@
 
         const fila = document.createElement("tr");
         fila.className = data.pago === "Sí" ? "pago" : "no-pago";
+
         fila.innerHTML = `
           <td>${fechaTexto}</td>
           <td>${data.dia || ""}</td>
@@ -80,6 +141,7 @@
           <td>S/ ${monto.toFixed(2)}</td>
           <td>${diasPagados}</td>
         `;
+
         tabla.appendChild(fila);
       });
 
@@ -89,6 +151,6 @@
 
     cargarRegistros();
   </script>
+
 </body>
 </html>
-
