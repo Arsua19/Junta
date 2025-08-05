@@ -1,126 +1,167 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Administrador - Junta de Cobros</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f3f3f3;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+    }
+    thead {
+      background-color: #005599;
+      color: white;
+    }
+    tr.pago {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    tr.no-pago {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    #totales {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 18px;
+    }
+    select {
+      margin-top: 10px;
+      padding: 8px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>📋 Administrador - Junta de Cobros</h2>
+
+    <label for="clienteSelect">Seleccionar Cliente:</label>
+    <select id="clienteSelect">
+      <option value="Elena">Elena (Diario)</option>
+      <option value="Julio">Julio (Semanal)</option>
+      <option value="Sabina">Sabina (Mensual)</option>
+    </select>
+
+    <table>
+      <thead>
+        <tr>
+          <th>📅 Fecha</th>
+          <th>🗓 Día</th>
+          <th>👤 Cliente</th>
+          <th>💵 ¿Pagó?</th>
+          <th>💰 Monto</th>
+          <th>📌 Días Pagados</th>
+        </tr>
+      </thead>
+      <tbody id="tablaRegistros"></tbody>
+    </table>
+
+    <div id="totales">
+      <span id="totalPagado">Total pagado: S/ 0.00</span><br>
+      <span id="totalDias">Total de días pagados: 0</span>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import {
+      getFirestore, collection, getDocs, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyCjRpXgMuoPiQK3lphUZ11DSSh5khhUcsE",
-      authDomain: "libreta-apuntes.firebaseapp.com",
-      projectId: "libreta-apuntes",
-      storageBucket: "libreta-apuntes.appspot.com",
-      messagingSenderId: "978320562467",
-      appId: "1:978320562467:web:de1d158f726bedf893b29c"
+      apiKey: "AIzaSyAapctHWYLZQB2AJq93PaHIO8a-D525h84",
+      authDomain: "junta-cobros.firebaseapp.com",
+      projectId: "junta-cobros",
+      storageBucket: "junta-cobros.appspot.com",
+      messagingSenderId: "114984888186",
+      appId: "1:114984888186:web:f526903357bb8039d618c3"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    document.getElementById("registroForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const fecha = new Date(document.getElementById("fecha").value);
-      const dia = document.getElementById("dia").value;
-      const pago = document.getElementById("pago").value === "true";
-      const monto = parseFloat(document.getElementById("monto").value);
-      const cliente = document.getElementById("cliente").value;
+    const tabla = document.getElementById("tablaRegistros");
+    const totalPagadoSpan = document.getElementById("totalPagado");
+    const totalDiasSpan = document.getElementById("totalDias");
+    const clienteSelect = document.getElementById("clienteSelect");
 
-      let diasPagados = pago ? 1 : 0;
+    async function cargarRegistros(clienteSeleccionado) {
+      tabla.innerHTML = "";
+      let totalMonto = 0;
+      let totalDias = 0;
 
-      const nuevo = { cliente, fecha, dia, pago, monto, diasPagados };
-      await addDoc(collection(db, "registrosCobro"), nuevo);
-      alert("Registro guardado");
-      location.reload();
-    });
+      const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
+      const snapshot = await getDocs(q);
 
-    async function cargarDatos() {
-      const querySnapshot = await getDocs(collection(db, "registrosCobro"));
-      const tabla = document.getElementById("tablaRegistros");
-      let sumaMonto = 0;
-      let sumaDiasPagados = 0;
+      snapshot.forEach(doc => {
+        const data = doc.data();
 
-      querySnapshot.forEach((docSnap) => {
-        const data = docSnap.data();
+        if (data.cliente !== clienteSeleccionado) return;
+
+        const monto = data.pago === "Sí" ? parseFloat(data.monto) : 0;
+        const diasPagados = data.pago === "Sí" ? Math.floor(monto / 20) : 0;
+        totalMonto += monto;
+        totalDias += diasPagados;
+
+        let fechaTexto = "Sin fecha";
+        if (data.fecha && typeof data.fecha.toDate === "function") {
+          fechaTexto = data.fecha.toDate().toISOString().split("T")[0];
+        } else if (typeof data.fecha === "string") {
+          fechaTexto = data.fecha;
+        }
+
         const fila = document.createElement("tr");
+        fila.className = data.pago === "Sí" ? "pago" : "no-pago";
 
-        const fecha = data.fecha.toDate().toLocaleDateString();
         fila.innerHTML = `
+          <td>${fechaTexto}</td>
+          <td>${data.dia || ""}</td>
           <td>${data.cliente || "Sin nombre"}</td>
-          <td>${fecha}</td>
-          <td>${data.dia}</td>
-          <td>S/ ${data.monto.toFixed(2)}</td>
-          <td>${data.pago ? "Pagado" : "No Pagado"}</td>
-          <td>${data.diasPagados}</td>
-          <td><button onclick="eliminarRegistro('${docSnap.id}')">Eliminar</button></td>
+          <td>${data.pago || "No"}</td>
+          <td>S/ ${monto.toFixed(2)}</td>
+          <td>${diasPagados}</td>
         `;
 
         tabla.appendChild(fila);
-        sumaMonto += data.monto;
-        sumaDiasPagados += data.diasPagados;
       });
 
-      document.getElementById("sumaMonto").textContent = `S/ ${sumaMonto.toFixed(2)}`;
-      document.getElementById("sumaDias").textContent = sumaDiasPagados;
+      totalPagadoSpan.textContent = `Total pagado: S/ ${totalMonto.toFixed(2)}`;
+      totalDiasSpan.textContent = `Total de días pagados: ${totalDias}`;
     }
 
-    window.eliminarRegistro = async function (id) {
-      await deleteDoc(doc(db, "registrosCobro", id));
-      alert("Registro eliminado");
-      location.reload();
-    };
+    clienteSelect.addEventListener("change", () => {
+      cargarRegistros(clienteSelect.value);
+    });
 
-    cargarDatos();
+    // Inicializar con Elena por defecto
+    cargarRegistros("Elena");
   </script>
-</head>
-<body>
-  <h1>Administrador - Junta de Cobros</h1>
-  <form id="registroForm">
-    <label>Fecha:</label>
-    <input type="date" id="fecha" required><br>
 
-    <label>Día:</label>
-    <input type="text" id="dia" required><br>
-
-    <label>Cliente:</label>
-    <select id="cliente">
-      <option value="Elena">Elena</option>
-      <option value="Julio">Julio</option>
-      <option value="Sabina">Sabina</option>
-    </select><br>
-
-    <label>Monto:</label>
-    <input type="number" id="monto" step="0.01" required><br>
-
-    <label>Pago:</label>
-    <select id="pago">
-      <option value="true">Pagado</option>
-      <option value="false">No Pagado</option>
-    </select><br>
-
-    <button type="submit">Registrar</button>
-  </form>
-
-  <h2>Registros</h2>
-  <table border="1">
-    <thead>
-      <tr>
-        <th>Cliente</th>
-        <th>Fecha</th>
-        <th>Día</th>
-        <th>Monto</th>
-        <th>Pago</th>
-        <th>Días Pagados</th>
-        <th>Acción</th>
-      </tr>
-    </thead>
-    <tbody id="tablaRegistros"></tbody>
-  </table>
-
-  <h3>Total Recaudado: <span id="sumaMonto">S/ 0.00</span></h3>
-  <h3>Días Pagados: <span id="sumaDias">0</span></h3>
 </body>
 </html>
-
-
