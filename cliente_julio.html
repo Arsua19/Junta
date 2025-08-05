@@ -2,100 +2,78 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>CUENTA DE COBRANZA - JULIO</title>
+  <title>Cuenta del Cobranza - Elena</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
       background: #f0f2f5;
-      margin: 0;
-      padding: 20px;
+      padding: 40px;
+      text-align: center;
+    }
+    .contenedor {
+      background: white;
+      max-width: 800px;
+      margin: auto;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      padding: 25px;
     }
     h2 {
-      color: #222;
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    .container {
-      max-width: 900px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-size: 24px;
+      margin-bottom: 20px;
     }
     table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0 10px;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
     }
     thead th {
-      background: #005599;
+      background: #004080;
       color: white;
-      padding: 12px;
-      text-align: center;
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
     }
-    tbody td {
-      background: #f9f9f9;
-      padding: 12px;
-      text-align: center;
-      border-radius: 8px;
-    }
-    tr.pago td {
-      background-color: #e0f7e9;
-      color: #155724;
+    .resumen {
+      margin-top: 10px;
       font-weight: bold;
-    }
-    tr.no-pago td {
-      background-color: #fbeaea;
-      color: #7a1c1c;
-    }
-    #totales {
-      margin-top: 20px;
-      text-align: center;
-      font-size: 18px;
-    }
-    #totales span {
-      display: block;
-      margin-top: 5px;
     }
   </style>
 </head>
 <body>
+  <div class="contenedor">
+    <h2>📄 CUENTA DEL COBRANZA - ELENA</h2>
 
-  <div class="container">
-    <h2>📄 CUENTA DEL COBRANZA - JULIO</h2>
     <table>
       <thead>
         <tr>
           <th>📅 Fecha</th>
-          <th>🗓 Día</th>
+          <th>📋 Día</th>
           <th>💵 ¿Pagó?</th>
-          <th>💰 Monto</th>
+          <th>🪙 Monto</th>
           <th>📌 Días Pagados</th>
         </tr>
       </thead>
-      <tbody id="tablaCliente"></tbody>
+      <tbody id="tablaRegistros"></tbody>
     </table>
 
-    <div id="totales">
-      <span id="totalPagado">Total pagado: S/ 0.00</span>
-      <span id="totalDias">Total de días pagados: 0</span>
-    </div>
+    <div class="resumen" id="resumenPago"></div>
+    <div class="resumen" id="resumenDias"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getFirestore, collection, getDocs, query, where, orderBy
+      getFirestore, collection, getDocs, query, orderBy, where
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB0Znv0HmW93BXC7oEAXqmDvdYzeRpSBFc",
       authDomain: "junta-e4b33.firebaseapp.com",
       projectId: "junta-e4b33",
-      storageBucket: "junta-e4b33",
+      storageBucket: "junta-e4b33.appspot.com",
       messagingSenderId: "1061817924806",
       appId: "1:1061817924806:web:1a0f7712524101ba816bc7"
     };
@@ -103,58 +81,52 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const tabla = document.getElementById("tablaCliente");
-    const totalDiv = document.getElementById("totalPagado");
-    const totalDiasDiv = document.getElementById("totalDias");
+    const cliente = "julio";
+    const tarifa = 140;
+    const unidad = "semana(s)";
+
+
+    const tabla = document.getElementById("tablaRegistros");
+    const resumenPago = document.getElementById("resumenPago");
+    const resumenDias = document.getElementById("resumenDias");
 
     async function cargarRegistros() {
+      let totalPagado = 0;
+      let totalUnidades = 0;
       tabla.innerHTML = "";
-      let totalMonto = 0;
-      let totalDias = 0;
 
       const q = query(
         collection(db, "registrosCobro"),
-        where("cliente", "==", "Julio"),
+        where("cliente", "==", cliente),
         orderBy("fecha")
       );
 
       const snapshot = await getDocs(q);
-
       snapshot.forEach(doc => {
         const data = doc.data();
+        const fecha = data.fecha.toDate().toISOString().split("T")[0];
+        const monto = parseFloat(data.monto).toFixed(2);
+        const unidades = data.pago === "Sí" ? (data.diasPagados || 0) : 0;
 
-        const monto = data.pago === "Sí" ? parseFloat(data.monto) : 0;
-        const diasPagados = data.pago === "Sí" ? Math.floor((monto / 140) * 7) : 0;
-        totalMonto += monto;
-        totalDias += diasPagados;
-
-        let fechaTexto = "Sin fecha";
-        if (data.fecha && typeof data.fecha.toDate === "function") {
-          fechaTexto = data.fecha.toDate().toISOString().split("T")[0];
-        } else if (typeof data.fecha === "string") {
-          fechaTexto = data.fecha;
-        }
+        totalUnidades += unidades;
+        totalPagado += data.pago === "Sí" ? parseFloat(monto) : 0;
 
         const fila = document.createElement("tr");
-        fila.className = data.pago === "Sí" ? "pago" : "no-pago";
-
         fila.innerHTML = `
-          <td>${fechaTexto}</td>
-          <td>${data.dia || ""}</td>
-          <td>${data.pago || "No"}</td>
-          <td>S/ ${monto.toFixed(2)}</td>
-          <td>${diasPagados}</td>
+          <td>${fecha}</td>
+          <td>${data.dia}</td>
+          <td>${data.pago}</td>
+          <td>S/ ${data.pago === "Sí" ? monto : "0.00"}</td>
+          <td>${unidades}</td>
         `;
-
         tabla.appendChild(fila);
       });
 
-      totalDiv.textContent = `Total pagado: S/ ${totalMonto.toFixed(2)}`;
-      totalDiasDiv.textContent = `Total de días pagados: ${totalDias}`;
+      resumenPago.textContent = `Total pagado: S/ ${totalPagado.toFixed(2)}`;
+      resumenDias.textContent = `Total de ${unidad} pagados: ${totalUnidades}`;
     }
 
     cargarRegistros();
   </script>
-
 </body>
 </html>
