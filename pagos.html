@@ -73,7 +73,7 @@
   const db = getFirestore(app);
 
   const urlParams = new URLSearchParams(window.location.search);
-  const cliente = urlParams.get("cliente") || "desconocido";
+  const cliente = (urlParams.get("cliente") || "desconocido").toLowerCase();
   document.querySelector("h2").textContent = `ADMINISTRADOR - ${cliente.toUpperCase()}`;
 
   const tarifas = {
@@ -127,8 +127,15 @@
       `;
       tabla.appendChild(fila);
     });
-   totalDias.textContent = `Total pagado: ${total} ${cliente === "elena" || cliente === "magali" ? "día(s)" : cliente === "julio" ? "semana(s)" : "mes(es)"}`;
 
+    // ✅ Mostrar tipo de unidad correcta según el cliente
+    totalDias.textContent = `Total pagado: ${total} ${
+      cliente === "elena" || cliente === "magali"
+        ? "día(s)"
+        : cliente === "julio"
+        ? "semana(s)"
+        : "mes(es)"
+    }`;
 
     document.querySelectorAll(".btn-eliminar").forEach(btn => {
       btn.addEventListener("click", async () => {
@@ -165,25 +172,25 @@
   }
 
   cargarRegistros();
-// 🔽 NUEVA FUNCIÓN: reiniciar cuenta del cliente
-document.getElementById("btnNuevaCuenta").addEventListener("click", async () => {
-const confirmar = confirm(`¿Seguro que deseas borrar todos los registros de ${cliente.toUpperCase()}? Esta acción no se puede deshacer.`);
-if (!confirmar) return;
-const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
-const snapshot = await getDocs(q);
-const batch = [];
-snapshot.forEach(docSnap => {
-const data = docSnap.data();
-if (data.cliente === cliente) {
-batch.push(deleteDoc(doc(db, "registrosCobro", docSnap.id)));
-}
-});
-await Promise.all(batch);
-alert("Cuenta reiniciada correctamente.");
-cargarRegistros();
-});
-</script>
 
+  // 🔽 NUEVA FUNCIÓN: reiniciar cuenta del cliente
+  document.getElementById("btnNuevaCuenta")?.addEventListener("click", async () => {
+    const confirmar = confirm(`¿Seguro que deseas borrar todos los registros de ${cliente.toUpperCase()}? Esta acción no se puede deshacer.`);
+    if (!confirmar) return;
+    const q = query(collection(db, "registrosCobro"), orderBy("fecha"));
+    const snapshot = await getDocs(q);
+    const batch = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.cliente === cliente) {
+        batch.push(deleteDoc(doc(db, "registrosCobro", docSnap.id)));
+      }
+    });
+    await Promise.all(batch);
+    alert("Cuenta reiniciada correctamente.");
+    cargarRegistros();
+  });
+</script>
 
 </body>
 </html>
