@@ -120,7 +120,7 @@
         if (data.cliente !== "magali") return;
 
         const monto = data.pago === "Sí" ? parseFloat(data.monto) : 0;
-        const diasPagados = data.pago === "Sí" ? Math.floor(monto / 10) : 0;
+        const diasPagados = data.pago === "Sí" ? Math.floor(monto / 50) : 0;
         totalMonto += monto;
         totalDias += diasPagados;
 
