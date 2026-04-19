@@ -140,13 +140,7 @@
       tabla.appendChild(fila);
     });
 
-    totalDias.textContent = `Total pagado: ${total} ${
-      cliente === "elena" || cliente === "magali"
-        ? "día(s)"
-        : cliente === "julio"
-        ? "semana(s)"
-        : "mes(es)"
-    }`;
+    totalDias.textContent = `Total pagado: ${total} día(s)`;
 
     document.querySelectorAll(".btn-eliminar").forEach(btn => {
       btn.addEventListener("click", async () => {
